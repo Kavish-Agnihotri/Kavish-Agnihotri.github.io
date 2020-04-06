@@ -10,6 +10,8 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+     <script src="https://www.patrick-wied.at/static/heatmapjs/assets/js/heatmap.min.js"></script>
+    <script src="https://www.patrick-wied.at/static/heatmapjs/assets/js/leaflet-heatmap.js"></script>
 
 
 	
@@ -21,9 +23,27 @@
 <div id="mapid" style="width: 1270px; height: 650px;"></div>
 <script>
 
-	var mymap = L.map('mapid').setView([12.9716,77.5946], 3);
 
-	L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
+  var testData = {
+      max: 1000,
+      data: []
+    };
+
+  var cfg = {
+  "radius": .05,
+  "maxOpacity": .8,
+  "scaleRadius": true,
+  "useLocalExtrema": true,
+  latField: 'lat',
+  lngField: 'lng',
+  valueField: 'count'
+  };
+
+  var heatmapLayer = new HeatmapOverlay(cfg);
+
+	// var mymap = L.map('mapid').setView([12.9716,77.5946], 3);
+
+	var baseLayer=L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
 
 	{
 		maxZoom: 18,
@@ -34,7 +54,13 @@
 		tileSize: 512,
 		zoomOffset: -1
 	}
-	).addTo(mymap);
+	);
+
+  var mymap = new L.Map('mapid', {
+      center: new L.LatLng(12.9716, 77.5946),
+      zoom: 3,
+      layers: [baseLayer, heatmapLayer]
+    });
 
 
     var getJSON = function(url, callback) {
@@ -62,27 +88,33 @@ getJSON('https://api.covid19india.org/travel_history.json',  function(err, data)
     if (err != null) {
         console.error(err);
     } else {
-    
-        // console.log(data.travel_history);
-        // console.log(data.travel_history.length);
         var n=data.travel_history.length;
         console.log();
 
           for(var x=0;x<n;x++)
           {
           	var lat=data.travel_history[x].latlong.split(",")[0];
-          	var long=data.travel_history[x].latlong.split(",")[1];
+          	var lng=data.travel_history[x].latlong.split(",")[1];
+            var count=30;
 
-          	if(lat!="" && long!="undefined")
+          	if(lat!="" && lng!="undefined")
           	{
-          	 var marker = L.marker([lat,long]
-          	 ).addTo(mymap)
-          	 .bindPopup(data.travel_history[x].pid).openPopup();
+          	 // var marker = L.marker([lat,lng]
+          	 // ).addTo(mymap)
+          	 // .bindPopup(data.travel_history[x].pid).openPopup();
+
+             var tmp={lat,lng,count};
+
+             testData.data.push(tmp);
+             heatmapLayer.addData(tmp);
+
           	}
 
           }
     }
 });
+// heatmapLayer.setData(testData);
+// console.log(testData);
 </script>
 
 
